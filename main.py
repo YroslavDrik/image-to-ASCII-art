@@ -1,6 +1,6 @@
 from PIL import Image , ImageEnhance, ImageDraw, ImageFont
 import math
-
+import random
 
 
 def convert_image(path_image ,char_list , size_art , inversion_img):
@@ -27,6 +27,8 @@ def convert_image(path_image ,char_list , size_art , inversion_img):
 
 def draw_img(final_art_list , size_art , is_color , path_image):
     color_list = []
+    color_pixel = [255, 255, 255]
+    color_background = [0 , 0, 0]
     if is_color == "T":
         img = Image.open(path_image)  # ./image.png
         enh = ImageEnhance.Contrast(img)
@@ -39,7 +41,7 @@ def draw_img(final_art_list , size_art , is_color , path_image):
                 color_pixel.append(list(value))
             color_list.append(color_pixel)
 
-    im = Image.new("RGB", (size_art*20, size_art*20), (0, 0, 0))
+    im = Image.new("RGB", (size_art*20, size_art*20), (color_background[0], color_background[1], color_background[2]))
 
     d = ImageDraw.Draw(im)
 
@@ -49,11 +51,10 @@ def draw_img(final_art_list , size_art , is_color , path_image):
         art_char = ""
         for j in i:
             art_char += j + " "
-        color_pixel = [255, 255, 255]
         if is_color == "T":
-            for i1 in range(0, size_art):
-                for j1 in range(0, size_art):
-                    color_pixel = color_list[i1][j1]
+            index_color = random.randrange(0, size_art)
+            color_pixel = color_list[index_y][index_color]
+
         font = ImageFont.truetype("Pillow/Tests/fonts/DejaVuSansMono.ttf", 17)
 
         d.text((0, index_y * 20), art_char, fill=(color_pixel[0], color_pixel[1], color_pixel[2]), font=font)
@@ -69,6 +70,7 @@ size_art = int(input("Enter the size of the art: ")) #64x64, 128x128, 256x256
 char_list = ["@" , "G", "5" , "4" , "2" , "'", "."] #from black to white
 image_inversion = str(input("Enter image inversion (T/F):"))#enter T or F
 is_color = str(input("Is color? (T/F): "))
+
 final_art = convert_image(path_image , char_list , size_art , image_inversion)
 draw_img(final_art , size_art , is_color , path_image)
 
