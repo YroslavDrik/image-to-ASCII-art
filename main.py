@@ -3,29 +3,30 @@ import math
 import random
 
 
-def convert_image(path_image ,char_list , size_art , inversion_img):
+def convert_image(path_image ,char_list , width , height , inversion_img):
     img = Image.open(path_image) # ./image.png
     img = img.convert("L") #convert to black and white format
     enh = ImageEnhance.Contrast(img)
     contrast_image = enh.enhance(2.0)
-    img2 = contrast_image.resize((size_art, size_art))
+    img2 = contrast_image.resize((width, height))
+    img2.save("123.png")
     img2 = img2.rotate(90)
     final_art = []
 
     if inversion_img == "T":
         char_list = char_list[::-1]
 
-    for i in range(0, size_art):
+    for i in range(0, height):
         line_art = []
         len_interval = 255//len(char_list)
-        for j in range(0, size_art):
-            value = img2.getpixel((i, j))
+        for j in range(0, width):
+            value = img2.getpixel((j, i))
             index = math.floor((value/len_interval))-1
             line_art.append(char_list[index])
         final_art.append(line_art)
     return final_art
 
-def draw_img(final_art_list , size_art , is_color , path_image):
+def draw_img(final_art_list , width , height , is_color , path_image):
     color_list = []
     color_pixel = [255, 255, 255]
     color_background = [0 , 0, 0]
@@ -33,15 +34,15 @@ def draw_img(final_art_list , size_art , is_color , path_image):
         img = Image.open(path_image)  # ./image.png
         enh = ImageEnhance.Contrast(img)
         contrast_image = enh.enhance(2.0)
-        img2 = contrast_image.resize((size_art, size_art))
-        for i in range(0, size_art):
+        img2 = contrast_image.resize((width, height))
+        for i in range(0, height):
             color_pixel = []
-            for j in range(0, size_art):
-                value = img2.getpixel((i, j))
+            for j in range(0, width):
+                value = img2.getpixel((j, i))
                 color_pixel.append(list(value))
             color_list.append(color_pixel)
 
-    im = Image.new("RGB", (size_art*20, size_art*20), (color_background[0], color_background[1], color_background[2]))
+    im = Image.new("RGB", (width*20, height*20), (color_background[0], color_background[1], color_background[2]))
 
     d = ImageDraw.Draw(im)
 
@@ -52,7 +53,7 @@ def draw_img(final_art_list , size_art , is_color , path_image):
         for j in i:
             art_char += j + " "
         if is_color == "T":
-            index_color = random.randrange(0, size_art)
+            index_color = random.randrange(0, width)
             color_pixel = color_list[index_y][index_color]
 
         font = ImageFont.truetype("Pillow/Tests/fonts/DejaVuSansMono.ttf", 17)
@@ -66,13 +67,14 @@ def draw_img(final_art_list , size_art , is_color , path_image):
 #----------------------------------------
 
 path_image = str(input("Enter the path of the image: "))
-size_art = int(input("Enter the size of the art: ")) #64x64, 128x128, 256x256
+height_art = int(input("Enter the height of the image: "))
+width_art = int(input("Enter the width of the image: "))
 char_list = ["@" , "G", "5" , "4" , "2" , "'", "."] #from black to white
 image_inversion = str(input("Enter image inversion (T/F):"))#enter T or F
 is_color = str(input("Is color? (T/F): "))
 
-final_art = convert_image(path_image , char_list , size_art , image_inversion)
-draw_img(final_art , size_art , is_color , path_image)
+final_art = convert_image(path_image , char_list , width_art, height_art , image_inversion)
+draw_img(final_art , width_art, height_art , is_color , path_image)
 
 with open("output.txt", "w") as f:
     f.write("")
@@ -80,7 +82,7 @@ with open("output.txt", "w") as f:
 for i in final_art :
     for j in i:
         with open("output.txt", "a") as f:
-            f.write(str(j) + "")
+            f.write(str(j) + " ")
 
     with open("output.txt", "a") as f:
         f.write("\n")
