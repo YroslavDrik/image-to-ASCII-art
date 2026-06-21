@@ -1,7 +1,8 @@
 from PIL import Image , ImageEnhance, ImageDraw, ImageFont
 import math
 import random
-
+import moviepy as mv
+import cv2
 
 def convert_image(path_image ,char_list , width , height , inversion_img):
     img = Image.open(path_image) # ./image.png
@@ -9,8 +10,7 @@ def convert_image(path_image ,char_list , width , height , inversion_img):
     enh = ImageEnhance.Contrast(img)
     contrast_image = enh.enhance(2.0)
     img2 = contrast_image.resize((width, height))
-    img2.save("123.png")
-    img2 = img2.rotate(90)
+    img2.save("test.png")
     final_art = []
 
     if inversion_img == "T":
@@ -26,7 +26,7 @@ def convert_image(path_image ,char_list , width , height , inversion_img):
         final_art.append(line_art)
     return final_art
 
-def draw_img(final_art_list , width , height , is_color , path_image):
+def draw_img(final_art_list , width , height , is_color , path_image , index):
     color_list = []
     color_pixel = [255, 255, 255]
     color_background = [0 , 0, 0]
@@ -46,7 +46,6 @@ def draw_img(final_art_list , width , height , is_color , path_image):
 
     d = ImageDraw.Draw(im)
 
-
     index_y = 0
     for i in final_art_list:
         art_char = ""
@@ -61,30 +60,68 @@ def draw_img(final_art_list , width , height , is_color , path_image):
         d.text((0, index_y * 20), art_char, fill=(color_pixel[0], color_pixel[1], color_pixel[2]), font=font)
         index_y += 1
 
+    path = "images_ascii/" + str(index) + ".png"
+    im.save(path)
 
-    im.save("output.png")
+def video_to_images(path):
+    vidcap = cv2.VideoCapture(path)
+    success, image = vidcap.read()
+    count = 0
+    while success:
+        path = "images/" + str(count) + ".png"
+        cv2.imwrite(path, image) #save frame
+        success, image = vidcap.read() #reading frame
+        count += 1
+        print(count)
 
-#----------------------------------------
+    return count
 
-path_image = str(input("Enter the path of the image: "))
+def art_to_video(count , fps , width , height):
+    image_path_list = []
+    for i in range(count):
+        path = "images_ascii/" + str(i) + ".png"
+        img = Image.open(path)
+        img = img.resize((width, height))
+        img.save(path)
+        image_path_list.append(path)
+    final_video = mv.ImageSequenceClip(image_path_list, fps=fps)
+    final_video.write_videofile("result.mp4")
+
+#------------------------------------------------------------
+char_list = ["@" , "G", "5" , "4" , "2" , "'", "."] #from black to white
+
+video_or_image = input("Enter the image or video (I/V): ")
+if video_or_image == "I":
+    path_image = input("Enter the path of the image: ")
+elif video_or_image == "V":
+    path_video = input("Enter the path of the video: ")
+    height_video = int(input("Enter the height of the video: "))
+    width_video = int(input("Enter the width of the video: "))
 height_art = int(input("Enter the height of the image: "))
 width_art = int(input("Enter the width of the image: "))
-char_list = ["@" , "G", "5" , "4" , "2" , "'", "."] #from black to white
 image_inversion = str(input("Enter image inversion (T/F):"))#enter T or F
 is_color = str(input("Is color? (T/F): "))
 
-final_art = convert_image(path_image , char_list , width_art, height_art , image_inversion)
-draw_img(final_art , width_art, height_art , is_color , path_image)
+if video_or_image == "I":
+    final_art = convert_image(path_image , char_list , width_art, height_art , image_inversion)
+    draw_img(final_art , width_art, height_art , is_color , path_image, 0)
+    with open("output.txt", "w") as f:
+        f.write("")
 
-with open("output.txt", "w") as f:
-    f.write("")
+    for i in final_art:
+        for j in i:
+            with open("output.txt", "a") as f:
+                f.write(str(j) + " ")
 
-for i in final_art :
-    for j in i:
         with open("output.txt", "a") as f:
-            f.write(str(j) + " ")
+            f.write("\n")
 
-    with open("output.txt", "a") as f:
-        f.write("\n")
+elif video_or_image == "V":
+    count_frames = video_to_images(path_video)
+    for i in range(count_frames):
+        path="images/"+str(i)+".png"
+        print(path)
+        final_art = convert_image(path , char_list , width_art, height_art , image_inversion)
+        draw_img(final_art , width_art, height_art , is_color , path  ,i)
 
-
+    art_to_video(count_frames , 30 , width_video , height_video)
