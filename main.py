@@ -55,8 +55,6 @@ def draw_img(final_art_list , width , height , is_color , path_image , index , c
     if video_or_img == "1":
         path = "output.png"
         im.rotate(270).transpose(Image.Transpose.FLIP_LEFT_RIGHT).save(path)
-
-
     else:
         path = "images_ascii/" + str(index) + ".png"
         im.rotate(270).transpose(Image.Transpose.FLIP_LEFT_RIGHT).save(path)
@@ -70,8 +68,6 @@ def video_to_images(path):
         cv2.imwrite(path, image) #save frame
         success, image = vidcap.read() #reading frame
         count += 1
-        print(count)
-
     return count
 
 def art_to_video(count , fps , width , height):
