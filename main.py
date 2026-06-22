@@ -1,6 +1,5 @@
 from PIL import Image , ImageEnhance, ImageDraw, ImageFont
 import math
-import random
 import moviepy as mv
 import cv2
 
@@ -13,7 +12,7 @@ def convert_image(path_image ,char_list , width , height , inversion_img):
     img2.save("test.png")
     final_art = []
 
-    if inversion_img == "T":
+    if inversion_img == "1":
         char_list = char_list[::-1]
 
     for i in range(0, height):
@@ -26,19 +25,16 @@ def convert_image(path_image ,char_list , width , height , inversion_img):
         final_art.append(line_art)
     return final_art
 
-def draw_img(final_art_list , width , height , is_color , path_image , index):
+def draw_img(final_art_list , width , height , is_color , path_image , index , color_background , video_or_img):
     color_list = []
     color_pixel = [255, 255, 255]
-    color_background = [0 , 0, 0]
-    if is_color == "T":
+    if is_color == "1":
         img = Image.open(path_image)  # ./image.png
-        enh = ImageEnhance.Contrast(img)
-        contrast_image = enh.enhance(2.0)
-        img2 = contrast_image.resize((width, height))
+        img = img.resize((width, height))
         for i in range(0, height):
             color_pixel = []
             for j in range(0, width):
-                value = img2.getpixel((j, i))
+                value = img.getpixel((j, i))
                 color_pixel.append(list(value))
             color_list.append(color_pixel)
 
@@ -46,22 +42,24 @@ def draw_img(final_art_list , width , height , is_color , path_image , index):
 
     d = ImageDraw.Draw(im)
 
-    index_y = 0
-    for i in final_art_list:
-        art_char = ""
-        for j in i:
-            art_char += j + " "
-        if is_color == "T":
-            index_color = random.randrange(0, width)
-            color_pixel = color_list[index_y][index_color]
+    for i in range(len(final_art_list)):
+        for j in range(len(final_art_list[i])):
+            art_char = final_art_list[i][j] + " "
+            if is_color == "1":
+                color_pixel = color_list[i][j]
+            print(i , j , art_char , color_pixel)
+            font = ImageFont.truetype("Pillow/Tests/fonts/DejaVuSansMono.ttf", 17)
 
-        font = ImageFont.truetype("Pillow/Tests/fonts/DejaVuSansMono.ttf", 17)
+            d.text((i*20, j * 20), art_char, fill=(color_pixel[0], color_pixel[1], color_pixel[2]), font=font)
 
-        d.text((0, index_y * 20), art_char, fill=(color_pixel[0], color_pixel[1], color_pixel[2]), font=font)
-        index_y += 1
+    if video_or_img == "1":
+        path = "output.png"
+        im.rotate(270).transpose(Image.Transpose.FLIP_LEFT_RIGHT).save(path)
 
-    path = "images_ascii/" + str(index) + ".png"
-    im.save(path)
+
+    else:
+        path = "images_ascii/" + str(index) + ".png"
+        im.rotate(270).transpose(Image.Transpose.FLIP_LEFT_RIGHT).save(path)
 
 def video_to_images(path):
     vidcap = cv2.VideoCapture(path)
@@ -90,21 +88,26 @@ def art_to_video(count , fps , width , height):
 #------------------------------------------------------------
 char_list = ["@" , "G", "5" , "4" , "2" , "'", "."] #from black to white
 
-video_or_image = input("Enter the image or video (I/V): ")
-if video_or_image == "I":
+video_or_image = input("Enter the image or video (Image - 1, Video - 2): ")
+if video_or_image == "1":
     path_image = input("Enter the path of the image: ")
-elif video_or_image == "V":
+elif video_or_image == "2":
     path_video = input("Enter the path of the video: ")
     height_video = int(input("Enter the height of the video: "))
     width_video = int(input("Enter the width of the video: "))
-height_art = int(input("Enter the height of the image: "))
-width_art = int(input("Enter the width of the image: "))
-image_inversion = str(input("Enter image inversion (T/F):"))#enter T or F
-is_color = str(input("Is color? (T/F): "))
+height_art = int(input("Enter the height of the art: "))
+width_art = int(input("Enter the width of the art: "))
+image_inversion = str(input("Enter image inversion (True - 1, False - 2): "))
+is_color = str(input("Is color? (True - 1, False - 2): "))
 
-if video_or_image == "I":
+if is_color == "1":
+    color_background = list(map(int , input("Enter the background color of the image(RGB): ").split())) #12 123 234
+else:
+    color_background = [0 , 0 ,0]
+
+if video_or_image == "1":
     final_art = convert_image(path_image , char_list , width_art, height_art , image_inversion)
-    draw_img(final_art , width_art, height_art , is_color , path_image, 0)
+    draw_img(final_art , width_art, height_art , is_color , path_image, 0 , color_background , video_or_image)
     with open("output.txt", "w") as f:
         f.write("")
 
@@ -116,12 +119,12 @@ if video_or_image == "I":
         with open("output.txt", "a") as f:
             f.write("\n")
 
-elif video_or_image == "V":
+elif video_or_image == "2":
     count_frames = video_to_images(path_video)
     for i in range(count_frames):
         path="images/"+str(i)+".png"
         print(path)
         final_art = convert_image(path , char_list , width_art, height_art , image_inversion)
-        draw_img(final_art , width_art, height_art , is_color , path  ,i)
+        draw_img(final_art , width_art, height_art , is_color , path  ,i , color_background , video_or_image)
 
     art_to_video(count_frames , 30 , width_video , height_video)
